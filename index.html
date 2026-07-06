@@ -27,7 +27,6 @@
             background: #ffffff;
             border-radius: 20px;
             padding: 15px;
-            box-shadow: 0 10px 40px rgba(26, 26, 78, 0.05);
         }
         
         h1, h2, h3, .script-font { 
@@ -37,10 +36,16 @@
             font-weight: 400;
         }
         
-        h1 { 
-            font-size: 34px; 
-            margin-bottom: 5px; 
-            letter-spacing: 1px;
+        h1.names {
+            font-size: 34px;
+            line-height: 1.3;
+            margin-top: 15px;
+        }
+        h1.names .ampersand {
+            font-size: 24px;
+            opacity: 0.6;
+            display: block;
+            margin: 2px 0;
         }
         
         h2 { 
@@ -175,17 +180,17 @@
             border: 0; 
         }
         
-        .crest { 
-            width: 160px; 
-            height: 160px;
-            margin: 5px auto 15px; 
-            display: block; 
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(26, 26, 78, 0.1);
-            object-fit: contain;
-            background: #ffffff;
+        /* ПРОСТО ПРЯМОУГОЛЬНЫЙ ГЕРБ БЕЗ РАМОК И ФОРМ */
+        .crest {
+            max-width: 220px;
+            width: 100%;
+            height: auto;
+            margin: 10px auto 15px;
+            display: block;
+            border-radius: 0; /* Никаких закруглений */
+            box-shadow: none; /* Никаких теней */
         }
-        
+
         .illustration { 
             width: 110px; 
             margin: 12px auto 5px; 
@@ -206,7 +211,7 @@
         .timing-block strong { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 400; display: block; margin-bottom: 3px; }
         .timing-block span { font-size: 15px; font-weight: 300; display: block; margin-bottom: 8px; }
 
-        /* ОЧЕНЬ ПЛАВНАЯ АНИМАЦИЯ */
+        /* ПЛАВНАЯ АНИМАЦИЯ */
         @keyframes softReveal {
             from { 
                 opacity: 0; 
@@ -226,7 +231,8 @@
             will-change: transform, opacity, filter;
         }
         
-        .container h1 { animation-delay: 0.15s; }
+        .container .crest { animation-delay: 0.1s; }
+        .container h1 { animation-delay: 0.2s; }
         .container .timer { animation-delay: 0.35s; }
         .container .divider { animation-delay: 0.55s; }
         .container h2 { animation-delay: 0.7s; }
@@ -234,15 +240,59 @@
         .container form { animation-delay: 1.0s; }
         
         .heart-icon { color: #c9a84c; font-size: 18px; }
+
+        /* КРАСИВОЕ ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            background: #ffffff;
+            color: #1a1a4e;
+            padding: 16px 28px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(26, 26, 78, 0.15);
+            border: 1px solid rgba(26, 26, 78, 0.08);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 999;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast .check {
+            color: #1a1a4e;
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ -->
+    <div id="successToast" class="toast">
+        <span class="check">✔</span>
+        <span>Спасибо! Ваш ответ отправлен. Ждем вас!</span>
+    </div>
+
     <div class="container">
-        <!-- ГЕРБ -->
+        <!-- ПРОСТО ПРЯМОУГОЛЬНЫЙ ГЕРБ -->
         <img src="https://psv4.vkuserphoto.ru/s/v1/d2/Wfwd4poKsURRPyaeRCYJjSayTzPHAhSywGmtmfQcmtCp1Z1JJlLMMbJZGhiF-0N0cGw_e6lPF-tzATNRRLpZ1gheaMR3OEEJB63NyQD7MlxTwCKmWx4dGVtoe8241n5y-E8lgQb_jvw6/DpwH-9-cr25yA1KEO38Ph6TDJ-jXhVy3KmNbG3bijVWe4OxPmcS1Q8jGgSUNOOn9AEvRoT0zXaeMeyFTV8unF4GT-fotor-bg-remover-20260706233012.png" class="crest" alt="Герб">
         
-        <h1>Кирилл и Александра</h1>
+        <h1 class="names">
+            Кирилл
+            <span class="ampersand">и</span>
+            Александра
+        </h1>
+        
         <h2 style="font-size: 20px; opacity: 0.7; margin-top: -5px;">14 августа 2026</h2>
         
         <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 11px; margin-top: 20px;">До свадьбы осталось:</p>
@@ -379,7 +429,7 @@
             }
         }, 1000);
 
-        // Отправка в Telegram
+        // Отправка в Telegram (ИСПРАВЛЕНА!)
         document.getElementById("guestForm").addEventListener("submit", function(e) {
             e.preventDefault();
             
@@ -404,7 +454,13 @@
             })
             .then(response => {
                 if(response.ok) {
-                    alert("Спасибо! Ваш ответ отправлен. Ждем вас!");
+                    // Показываем красивое уведомление
+                    const toast = document.getElementById('successToast');
+                    toast.classList.add('show');
+                    // Через 3 секунды скрываем
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3000);
                     document.getElementById("guestForm").reset();
                 } else {
                     alert("Ошибка при отправке. Попробуйте еще раз.");
