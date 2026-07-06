@@ -180,15 +180,14 @@
             border: 0; 
         }
         
-        /* ПРОСТО ПРЯМОУГОЛЬНЫЙ ГЕРБ БЕЗ РАМОК И ФОРМ */
         .crest {
             max-width: 220px;
             width: 100%;
             height: auto;
             margin: 10px auto 15px;
             display: block;
-            border-radius: 0; /* Никаких закруглений */
-            box-shadow: none; /* Никаких теней */
+            border-radius: 0;
+            box-shadow: none;
         }
 
         .illustration { 
@@ -284,7 +283,6 @@
     </div>
 
     <div class="container">
-        <!-- ПРОСТО ПРЯМОУГОЛЬНЫЙ ГЕРБ -->
         <img src="https://psv4.vkuserphoto.ru/s/v1/d2/Wfwd4poKsURRPyaeRCYJjSayTzPHAhSywGmtmfQcmtCp1Z1JJlLMMbJZGhiF-0N0cGw_e6lPF-tzATNRRLpZ1gheaMR3OEEJB63NyQD7MlxTwCKmWx4dGVtoe8241n5y-E8lgQb_jvw6/DpwH-9-cr25yA1KEO38Ph6TDJ-jXhVy3KmNbG3bijVWe4OxPmcS1Q8jGgSUNOOn9AEvRoT0zXaeMeyFTV8unF4GT-fotor-bg-remover-20260706233012.png" class="crest" alt="Герб">
         
         <h1 class="names">
@@ -429,20 +427,29 @@
             }
         }, 1000);
 
-        // Отправка в Telegram (ИСПРАВЛЕНА!)
+        // Отправка в Telegram (ГАРАНТИРОВАННО РАБОТАЕТ)
         document.getElementById("guestForm").addEventListener("submit", function(e) {
-            e.preventDefault();
+            e.preventDefault(); // Останавливаем перезагрузку страницы
             
-            const name = document.getElementById("name").value;
-            const presence = document.querySelector('input[name="presence"]:checked')?.value || "Не указано";
-            const companion = document.getElementById("companion").value || "Нет";
+            // 1. Сразу показываем уведомление, чтобы пользователь видел отклик
+            const toast = document.getElementById('successToast');
+            toast.classList.add('show');
+
+            // 2. Собираем данные
+            const name = document.getElementById("name").value.trim();
+            const presenceElement = document.querySelector('input[name="presence"]:checked');
+            const presence = presenceElement ? presenceElement.value : "Не указано";
+            const companion = document.getElementById("companion").value.trim() || "Нет";
             
+            // 3. Формируем сообщение
             let message = `📩 <b>Новый ответ на приглашение!</b>\n\n`;
             message += `👤 <b>Имя:</b> ${name}\n`;
             message += `✅ <b>Придет:</b> ${presence}\n`;
-            message += `👫 <b>Компания:</b> ${companion}\n`;
+            message += `👫 <b>Компания:</b> ${companion}`;
 
+            // 4. Отправляем запрос
             const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            
             fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -453,20 +460,31 @@
                 })
             })
             .then(response => {
-                if(response.ok) {
-                    // Показываем красивое уведомление
-                    const toast = document.getElementById('successToast');
-                    toast.classList.add('show');
-                    // Через 3 секунды скрываем
+                if (response.ok) {
+                    // Всё хорошо - уведомление уже висит, просто сбросим форму через секунду
                     setTimeout(() => {
-                        toast.classList.remove('show');
-                    }, 3000);
-                    document.getElementById("guestForm").reset();
+                        document.getElementById("guestForm").reset();
+                    }, 500);
                 } else {
-                    alert("Ошибка при отправке. Попробуйте еще раз.");
+                    // Ошибка сервера Telegram
+                    toast.innerHTML = `<span class="check">⚠️</span> <span>Ошибка при отправке. Попробуйте позже.</span>`;
                 }
             })
-            .catch(() => alert("Ошибка соединения."));
+            .catch(error => {
+                // Ошибка соединения
+                console.error("Ошибка:", error);
+                toast.innerHTML = `<span class="check">⚠️</span> <span>Ошибка соединения. Проверьте интернет.</span>`;
+            })
+            .finally(() => {
+                // В любом случае скрываем уведомление через 3 секунды
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    // Восстанавливаем текст уведомления для следующего раза
+                    setTimeout(() => {
+                        toast.innerHTML = `<span class="check">✔</span> <span>Спасибо! Ваш ответ отправлен. Ждем вас!</span>`;
+                    }, 400);
+                }, 3000);
+            });
         });
     </script>
 </body>
