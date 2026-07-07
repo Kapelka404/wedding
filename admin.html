@@ -256,7 +256,7 @@
     <script>
         let currentGroup = 'all';
 
-        // Загрузка с GitHub (с защитой от кэширования и кракозябр)
+        // Загрузка с GitHub (исправленная кодировка UTF-8)
         function loadResponses() {
             return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
                 cache: 'no-cache'
@@ -264,9 +264,12 @@
                 .then(res => res.json())
                 .then(data => {
                     if (!data.content) return [];
-                    // Декодируем base64 в UTF-8
-                    const content = atob(data.content);
-                    const utf8Content = decodeURIComponent(escape(content));
+                    const binaryString = atob(data.content);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const utf8Content = new TextDecoder('utf-8').decode(bytes);
                     return JSON.parse(utf8Content);
                 })
                 .catch(() => []);
@@ -274,8 +277,13 @@
 
         function saveResponses(responses) {
             const jsonString = JSON.stringify(responses, null, 2);
-            const utf8String = unescape(encodeURIComponent(jsonString));
-            const content = btoa(utf8String);
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(jsonString);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            const content = btoa(binary);
             return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
                 method: 'PUT',
                 headers: {
