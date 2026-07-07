@@ -560,7 +560,7 @@
         const REPO_OWNER = 'Kapelka404';
         const REPO_NAME = 'wedding';
         const FILE_PATH = 'data.json';
-        const TOKEN_FILE = '.token';
+        const TOKEN_FILE = 'token.txt';  // ← ИЗМЕНЕНО С .token НА token.txt
         const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
         const TOKEN_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${TOKEN_FILE}`;
 
@@ -569,17 +569,29 @@
         // ===== ЗАГРУЗКА ТОКЕНА ИЗ СЕКРЕТНОГО ФАЙЛА =====
         async function loadToken() {
             try {
-                logDebug('Загрузка токена из секретного файла...');
+                logDebug('Загрузка токена из файла:', TOKEN_FILE);
                 const response = await fetch(TOKEN_URL);
+                
+                logDebug('Ответ на загрузку токена:', response.status);
                 
                 if (!response.ok) {
                     logDebug('Ошибка загрузки токена:', response.status);
+                    if (response.status === 404) {
+                        logDebug('❌ Файл token.txt не найден! Создайте его в корне репозитория');
+                    }
                     return false;
                 }
                 
                 const token = await response.text();
                 githubToken = token.trim();
-                logDebug('Токен загружен, длина:', githubToken.length);
+                
+                if (githubToken.length < 10) {
+                    logDebug('❌ Токен слишком короткий! Длина:', githubToken.length);
+                    return false;
+                }
+                
+                logDebug('✅ Токен загружен, длина:', githubToken.length);
+                logDebug('Первые 10 символов:', githubToken.substring(0, 10) + '...');
                 
                 // Сохраняем в localStorage для быстрого доступа
                 try {
@@ -610,7 +622,7 @@
             }, 4000);
         }
 
-        // ===== ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ (ПУБЛИЧНЫЙ ДОСТУП) =====
+        // ===== ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ =====
         async function getGuests() {
             logDebug('Получение данных из репозитория...');
             try {
@@ -650,12 +662,14 @@
             if (!githubToken) {
                 const loaded = await loadToken();
                 if (!loaded) {
-                    const errorMsg = '❌ Не удалось загрузить токен!';
+                    const errorMsg = '❌ Не удалось загрузить токен из файла ' + TOKEN_FILE;
                     logDebug(errorMsg);
                     showToast('Техническая ошибка. Попробуйте позже.', false);
                     throw new Error('Token not loaded');
                 }
             }
+
+            logDebug('Токен для сохранения, длина:', githubToken.length);
 
             try {
                 // Получаем текущий файл для sha
@@ -676,7 +690,10 @@
                 } else if (getResponse.status === 404) {
                     logDebug('Файл не найден, создадим новый');
                 } else if (getResponse.status === 401) {
-                    throw new Error('Неверный токен. Проверьте права доступа.');
+                    const errorMsg = '❌ Токен невалидный! Проверьте файл ' + TOKEN_FILE;
+                    logDebug(errorMsg);
+                    showToast('Ошибка: невалидный токен. Проверьте настройки.', false);
+                    throw new Error('Bad credentials');
                 } else {
                     throw new Error(`HTTP ${getResponse.status}: ${getResponse.statusText}`);
                 }
@@ -720,6 +737,10 @@
                 if (!updateResponse.ok) {
                     const errorData = await updateResponse.json();
                     logDebug('Ошибка сохранения:', errorData);
+                    
+                    if (updateResponse.status === 401) {
+                        showToast('❌ Токен невалидный! Обновите файл ' + TOKEN_FILE, false);
+                    }
                     throw new Error(`HTTP ${updateResponse.status}: ${updateResponse.statusText}`);
                 }
                 
@@ -830,6 +851,7 @@
             logDebug('✅ Сайт загружен! Группа:', group);
             logDebug('🔑 Токен ' + (githubToken ? 'загружен' : 'НЕ ЗАГРУЖЕН'));
             logDebug('💡 Нажмите 🐛 в правом нижнем углу для отладки');
+            logDebug('📁 Файл с токеном: ' + TOKEN_FILE);
         })();
     </script>
 </body>
