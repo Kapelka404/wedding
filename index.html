@@ -438,11 +438,9 @@
             const audio = document.getElementById('bgMusic');
             audio.volume = 0.3;
 
-            // Пытаемся запустить один раз при загрузке (может сработать на ПК)
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(() => {
-                    // Если не получилось, запускаем по первому клику в любом месте страницы
                     const startOnFirstClick = () => {
                         audio.play().catch(() => {});
                         document.removeEventListener('click', startOnFirstClick);
@@ -470,7 +468,6 @@
             document.getElementById('friendsExtraText').style.display = 'block';
             document.getElementById('mainQuestion').style.display = 'none';
             document.getElementById('friendsQuestion').style.display = 'block';
-            // Обводим 15-е число зелёным
             document.getElementById('day15').style.border = '2px solid #27ae60';
             document.getElementById('day15').style.borderRadius = '50%';
             document.getElementById('day15').style.padding = '2px';
@@ -478,8 +475,8 @@
             document.getElementById('day15').style.fontWeight = 'bold';
         }
 
-        // ===== СОХРАНЕНИЕ НА GITHUB (исправленная кодировка UTF-8) =====
-        document.getElementById("guestForm").addEventListener("submit", function(e) {
+        // ===== НАДЁЖНОЕ СОХРАНЕНИЕ НА GITHUB (async/await) =====
+        document.getElementById("guestForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             
             const toast = document.getElementById('successToast');
@@ -493,66 +490,71 @@
 
             const newResponse = { name, presence, companion, date, group };
 
-            // 1. Получаем текущий файл
-            fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json')
-                .then(res => res.json())
-                .then(data => {
-                    let responses = [];
-                    if (data.content) {
-                        // Корректное декодирование UTF-8 (без устаревших escape/unescape)
-                        const binaryString = atob(data.content);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
-                        }
-                        const utf8Content = new TextDecoder('utf-8').decode(bytes);
-                        try {
-                            responses = JSON.parse(utf8Content);
-                        } catch (e) {
-                            responses = [];
-                        }
+            try {
+                // 1. Сначала получаем текущий файл и его SHA
+                const getRes = await fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json');
+                const data = await getRes.json();
+                
+                let responses = [];
+                let sha = '';
+                
+                if (data.content) {
+                    sha = data.sha;
+                    const binaryString = atob(data.content);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
                     }
-                    
-                    responses.push(newResponse);
+                    const utf8Content = new TextDecoder('utf-8').decode(bytes);
+                    responses = JSON.parse(utf8Content);
+                }
+                
+                // 2. Добавляем нового гостя
+                responses.push(newResponse);
 
-                    // Корректное кодирование UTF-8 в base64
-                    const jsonString = JSON.stringify(responses, null, 2);
-                    const encoder = new TextEncoder();
-                    const bytes = encoder.encode(jsonString);
-                    let binary = '';
-                    for (let i = 0; i < bytes.length; i++) {
-                        binary += String.fromCharCode(bytes[i]);
-                    }
-                    const updatedContent = btoa(binary);
+                // 3. Кодируем обратно в base64 (UTF-8)
+                const jsonString = JSON.stringify(responses, null, 2);
+                const encoder = new TextEncoder();
+                const bytes2 = encoder.encode(jsonString);
+                let binary = '';
+                for (let i = 0; i < bytes2.length; i++) {
+                    binary += String.fromCharCode(bytes2[i]);
+                }
+                const updatedContent = btoa(binary);
 
-                    return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
-                        method: 'PUT',
-                        headers: {
-                            'Accept': 'application/vnd.github.v3+json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: 'Новый ответ гостя',
-                            content: updatedContent,
-                            sha: data.sha || ''
-                        })
-                    });
-                })
-                .then(res => res.json())
-                .then(() => {
+                // 4. Отправляем обновление с SHA
+                const putRes = await fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Новый ответ гостя',
+                        content: updatedContent,
+                        sha: sha
+                    })
+                });
+
+                if (putRes.ok) {
                     setTimeout(() => {
                         document.getElementById("guestForm").reset();
                     }, 500);
-                })
-                .catch(err => {
-                    console.error('Ошибка сохранения:', err);
-                    toast.innerHTML = `<span class="check">⚠️</span> <span>Ошибка при сохранении. Попробуйте позже.</span>`;
-                })
-                .finally(() => {
+                } else {
+                    throw new Error('GitHub API error');
+                }
+            } catch (err) {
+                console.error('Ошибка сохранения:', err);
+                toast.innerHTML = `<span class="check">⚠️</span> <span>Ошибка при сохранении. Попробуйте позже.</span>`;
+            } finally {
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    // Восстанавливаем текст уведомления
                     setTimeout(() => {
-                        toast.classList.remove('show');
-                    }, 3000);
-                });
+                        toast.innerHTML = `<span class="check">✔</span> <span>Спасибо! Ваш ответ отправлен. Ждем вас!</span>`;
+                    }, 300);
+                }, 3000);
+            }
         });
 
         // Таймер
