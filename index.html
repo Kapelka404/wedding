@@ -433,23 +433,23 @@
     <audio id="bgMusic" src="https://raw.githubusercontent.com/Kapelka404/wedding/main/Edith%20Piaf%20(%D0%AD%D0%B4%D0%B8%D1%82%20%D0%9F%D0%B8%D0%B0%D1%84)%20-%20La%20Foule.mp3" loop preload="auto"></audio>
 
     <script>
-        // ===== МУЗЫКА: принудительный запуск по клику =====
+        // ===== МУЗЫКА: ПРИНУДИТЕЛЬНЫЙ ЗАПУСК ПО КЛИКУ (ПК и ТЕЛЕФОН) =====
         document.addEventListener('DOMContentLoaded', function() {
             const audio = document.getElementById('bgMusic');
             audio.volume = 0.3;
 
-            // Пробуем запустить сразу (для ПК)
+            // Пытаемся запустить один раз при загрузке (может сработать на ПК)
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(() => {
-                    // Если не получилось — ждём первого клика/тапа
-                    const startOnFirstTouch = () => {
-                        audio.play();
-                        document.removeEventListener('click', startOnFirstTouch);
-                        document.removeEventListener('touchstart', startOnFirstTouch);
+                    // Если не получилось, запускаем по первому клику в любом месте страницы
+                    const startOnFirstClick = () => {
+                        audio.play().catch(() => {});
+                        document.removeEventListener('click', startOnFirstClick);
+                        document.removeEventListener('touchstart', startOnFirstClick);
                     };
-                    document.addEventListener('click', startOnFirstTouch);
-                    document.addEventListener('touchstart', startOnFirstTouch);
+                    document.addEventListener('click', startOnFirstClick);
+                    document.addEventListener('touchstart', startOnFirstClick);
                 });
             }
         });
@@ -478,7 +478,7 @@
             document.getElementById('day15').style.fontWeight = 'bold';
         }
 
-        // ===== СОХРАНЕНИЕ НА GITHUB (с защитой от 304 и кракозябр) =====
+        // ===== СОХРАНЕНИЕ НА GITHUB (исправленная кодировка UTF-8) =====
         document.getElementById("guestForm").addEventListener("submit", function(e) {
             e.preventDefault();
             
@@ -499,10 +499,13 @@
                 .then(data => {
                     let responses = [];
                     if (data.content) {
-                        // Декодируем в UTF-8
-                        const content = atob(data.content);
-                        // Исправляем кодировку для русских букв
-                        const utf8Content = decodeURIComponent(escape(content));
+                        // Корректное декодирование UTF-8 (без устаревших escape/unescape)
+                        const binaryString = atob(data.content);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        const utf8Content = new TextDecoder('utf-8').decode(bytes);
                         try {
                             responses = JSON.parse(utf8Content);
                         } catch (e) {
@@ -512,10 +515,15 @@
                     
                     responses.push(newResponse);
 
-                    // Кодируем обратно с сохранением UTF-8
+                    // Корректное кодирование UTF-8 в base64
                     const jsonString = JSON.stringify(responses, null, 2);
-                    const utf8String = unescape(encodeURIComponent(jsonString));
-                    const updatedContent = btoa(utf8String);
+                    const encoder = new TextEncoder();
+                    const bytes = encoder.encode(jsonString);
+                    let binary = '';
+                    for (let i = 0; i < bytes.length; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    const updatedContent = btoa(binary);
 
                     return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
                         method: 'PUT',
