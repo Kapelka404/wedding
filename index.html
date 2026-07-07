@@ -405,8 +405,11 @@
         <p style="font-size: 12px; opacity: 0.4; margin-top: 20px; letter-spacing: 2px; text-transform: uppercase;">До встречи!</p>
     </div>
 
+    <!-- АУДИОПЛЕЕР (без кнопки) -->
+    <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop preload="auto"></audio>
+
     <script>
-        // ВАШИ ДАННЫЕ ТЕЛЕГРАММА
+        // ВАШИ ДАННЫЕ ТЕЛЕГРАММА (правильный ID)
         const BOT_TOKEN = "8908167176:AAER3ahsEFm8P_AFE9DweyB13FdfORjgnXU"; 
         const CHAT_ID = "1984847461";
 
@@ -427,11 +430,32 @@
             }
         }, 1000);
 
-        // Отправка в Telegram (ГАРАНТИРОВАННО РАБОТАЕТ)
+        // АВТОМАТИЧЕСКИЙ ЗАПУСК МУЗЫКИ
+        document.addEventListener('DOMContentLoaded', function() {
+            const audio = document.getElementById('bgMusic');
+            audio.volume = 0.3; // Громкость 30%
+
+            // Пытаемся запустить сразу
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // Если автозапуск заблокирован, ждём первого касания
+                    const startMusic = () => {
+                        audio.play();
+                        document.removeEventListener('click', startMusic);
+                        document.removeEventListener('touchstart', startMusic);
+                    };
+                    document.addEventListener('click', startMusic);
+                    document.addEventListener('touchstart', startMusic);
+                });
+            }
+        });
+
+        // Отправка в Telegram
         document.getElementById("guestForm").addEventListener("submit", function(e) {
             e.preventDefault(); // Останавливаем перезагрузку страницы
             
-            // 1. Сразу показываем уведомление, чтобы пользователь видел отклик
+            // 1. Сразу показываем уведомление
             const toast = document.getElementById('successToast');
             toast.classList.add('show');
 
@@ -461,7 +485,7 @@
             })
             .then(response => {
                 if (response.ok) {
-                    // Всё хорошо - уведомление уже висит, просто сбросим форму через секунду
+                    // Всё хорошо
                     setTimeout(() => {
                         document.getElementById("guestForm").reset();
                     }, 500);
@@ -471,15 +495,13 @@
                 }
             })
             .catch(error => {
-                // Ошибка соединения
                 console.error("Ошибка:", error);
                 toast.innerHTML = `<span class="check">⚠️</span> <span>Ошибка соединения. Проверьте интернет.</span>`;
             })
             .finally(() => {
-                // В любом случае скрываем уведомление через 3 секунды
+                // Скрываем уведомление через 3 секунды
                 setTimeout(() => {
                     toast.classList.remove('show');
-                    // Восстанавливаем текст уведомления для следующего раза
                     setTimeout(() => {
                         toast.innerHTML = `<span class="check">✔</span> <span>Спасибо! Ваш ответ отправлен. Ждем вас!</span>`;
                     }, 400);
