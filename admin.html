@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Свадьба Кирилла и Александры</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: #f5f5f5;
+            color: #1a1a4e; 
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .admin-container {
+            max-width: 800px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(26, 26, 78, 0.1);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.6;
+            margin-bottom: 30px;
+        }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 2px solid #1a1a4e;
+            background: transparent;
+            color: #1a1a4e;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #1a1a4e;
+            color: #fff;
+        }
+
+        .tab-btn:hover {
+            background: #c9a84c;
+            border-color: #c9a84c;
+            color: #1a1a4e;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a4e;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #1a1a4e;
+            color: #fff;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-yes {
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .status-no {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn-export {
+            display: inline-block;
+            background: #1a1a4e;
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-export:hover {
+            background: #c9a84c;
+            color: #1a1a4e;
+        }
+
+        .btn-clear {
+            display: inline-block;
+            background: #e74c3c;
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-clear:hover {
+            background: #c0392b;
+        }
+
+        .group-label {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .group-family {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .group-relatives {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .group-friend {
+            background: #fff3e0;
+            color: #e65100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <h1>Админ-панель</h1>
+        <p class="subtitle">Список гостей, подтвердивших присутствие</p>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-group="all" onclick="switchTab('all')">Все (0)</button>
+            <button class="tab-btn" data-group="family" onclick="switchTab('family')">👨‍👩‍👧‍👦 Близкие (0)</button>
+            <button class="tab-btn" data-group="relatives" onclick="switchTab('relatives')">👨‍👩‍👦 Дальние (0)</button>
+            <button class="tab-btn" data-group="friend" onclick="switchTab('friend')">🍖 Друзья (0)</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Всего ответов</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="yesCount">0</div>
+                <div class="stat-label">Придут</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="noCount">0</div>
+                <div class="stat-label">Не придут</div>
+            </div>
+        </div>
+
+        <div id="responsesContainer">
+            <!-- Таблица будет заполняться через JavaScript -->
+        </div>
+
+        <div class="actions">
+            <button class="btn-export" onclick="exportToCSV()">📥 Скачать список (CSV)</button>
+            <button class="btn-clear" onclick="clearAllResponses()">🗑 Очистить все</button>
+        </div>
+    </div>
+
+    <script>
+        let currentGroup = 'all';
+
+        function loadResponses() {
+            const stored = localStorage.getItem('weddingResponses');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveResponses(responses) {
+            localStorage.setItem('weddingResponses', JSON.stringify(responses));
+        }
+
+        function getGroupLabel(group) {
+            const labels = {
+                'family': 'Близкие',
+                'relatives': 'Дальние',
+                'friend': 'Друзья'
+            };
+            return labels[group] || 'Неизвестно';
+        }
+
+        function getGroupClass(group) {
+            const classes = {
+                'family': 'group-family',
+                'relatives': 'group-relatives',
+                'friend': 'group-friend'
+            };
+            return classes[group] || '';
+        }
+
+        function switchTab(group) {
+            currentGroup = group;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-group="${group}"]`).classList.add('active');
+            renderTable();
+        }
+
+        function renderTable() {
+            const allResponses = loadResponses();
+            let responses = allResponses;
+            if (currentGroup !== 'all') {
+                responses = allResponses.filter(r => r.group === currentGroup);
+            }
+
+            const container = document.getElementById('responsesContainer');
+
+            // Обновляем статистику
+            document.getElementById('totalCount').textContent = allResponses.length;
+
+            // Обновляем счетчики на вкладках
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const g = btn.dataset.group;
+                const count = g === 'all' ? allResponses.length : allResponses.filter(r => r.group === g).length;
+                btn.textContent = btn.textContent.replace(/\(\d+\)/, `(${count})`);
+            });
+
+            const yes = allResponses.filter(r => r.presence && r.presence !== 'К сожалению, не смогу').length;
+            const no = allResponses.filter(r => r.presence === 'К сожалению, не смогу').length;
+            document.getElementById('yesCount').textContent = yes;
+            document.getElementById('noCount').textContent = no;
+
+            if (responses.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>Пока нет ни одного ответа в этой группе.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Имя</th>
+                                <th>Ответ</th>
+                                <th>Компания</th>
+                                <th>Группа</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            responses.forEach((r, index) => {
+                const isYes = r.presence && r.presence !== 'К сожалению, не смогу';
+                const statusClass = isYes ? 'status-yes' : 'status-no';
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${r.name}</strong></td>
+                        <td class="${statusClass}">${r.presence}</td>
+                        <td>${r.companion || '—'}</td>
+                        <td><span class="group-label ${getGroupClass(r.group)}">${getGroupLabel(r.group)}</span></td>
+                        <td style="font-size: 12px; opacity: 0.7;">${r.date || 'только что'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function exportToCSV() {
+            const responses = loadResponses();
+            if (responses.length === 0) {
+                alert('Нет данных для экспорта.');
+                return;
+            }
+
+            let csv = 'Имя,Ответ,Компания,Группа,Дата\n';
+            responses.forEach(r => {
+                csv += `"${r.name}","${r.presence}","${r.companion || ''}","${getGroupLabel(r.group)}","${r.date || ''}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'список_гостей.csv';
+            link.click();
+        }
+
+        function clearAllResponses() {
+            if (confirm('Вы уверены? Это удалит все сохранённые ответы.')) {
+                saveResponses([]);
+                renderTable();
+                alert('Все ответы удалены.');
+            }
+        }
+
+        // Загружаем таблицу при открытии страницы
+        renderTable();
+    </script>
+</body>
+</html>
