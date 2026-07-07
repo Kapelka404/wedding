@@ -42,7 +42,6 @@
             margin-bottom: 30px;
         }
 
-        /* Вкладки */
         .tabs {
             display: flex;
             justify-content: center;
@@ -257,13 +256,32 @@
     <script>
         let currentGroup = 'all';
 
+        // Загрузка с GitHub
         function loadResponses() {
-            const stored = localStorage.getItem('weddingResponses');
-            return stored ? JSON.parse(stored) : [];
+            return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json')
+                .then(res => res.json())
+                .then(data => {
+                    const content = atob(data.content);
+                    return JSON.parse(content);
+                })
+                .catch(() => []);
         }
 
         function saveResponses(responses) {
-            localStorage.setItem('weddingResponses', JSON.stringify(responses));
+            // Для очистки — перезаписываем файл
+            const content = btoa(JSON.stringify(responses, null, 2));
+            return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Очистка списка ответов',
+                    content: content,
+                    sha: 'current_sha' // будет заменено
+                })
+            });
         }
 
         function getGroupLabel(group) {
@@ -292,107 +310,107 @@
         }
 
         function renderTable() {
-            const allResponses = loadResponses();
-            let responses = allResponses;
-            if (currentGroup !== 'all') {
-                responses = allResponses.filter(r => r.group === currentGroup);
-            }
+            loadResponses().then(allResponses => {
+                let responses = allResponses;
+                if (currentGroup !== 'all') {
+                    responses = allResponses.filter(r => r.group === currentGroup);
+                }
 
-            const container = document.getElementById('responsesContainer');
+                const container = document.getElementById('responsesContainer');
 
-            // Обновляем статистику
-            document.getElementById('totalCount').textContent = allResponses.length;
+                document.getElementById('totalCount').textContent = allResponses.length;
 
-            // Обновляем счетчики на вкладках
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                const g = btn.dataset.group;
-                const count = g === 'all' ? allResponses.length : allResponses.filter(r => r.group === g).length;
-                btn.textContent = btn.textContent.replace(/\(\d+\)/, `(${count})`);
-            });
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    const g = btn.dataset.group;
+                    const count = g === 'all' ? allResponses.length : allResponses.filter(r => r.group === g).length;
+                    btn.textContent = btn.textContent.replace(/\(\d+\)/, `(${count})`);
+                });
 
-            const yes = allResponses.filter(r => r.presence && r.presence !== 'К сожалению, не смогу').length;
-            const no = allResponses.filter(r => r.presence === 'К сожалению, не смогу').length;
-            document.getElementById('yesCount').textContent = yes;
-            document.getElementById('noCount').textContent = no;
+                const yes = allResponses.filter(r => r.presence && r.presence !== 'К сожалению, не смогу').length;
+                const no = allResponses.filter(r => r.presence === 'К сожалению, не смогу').length;
+                document.getElementById('yesCount').textContent = yes;
+                document.getElementById('noCount').textContent = no;
 
-            if (responses.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">📭</div>
-                        <p>Пока нет ни одного ответа в этой группе.</p>
+                if (responses.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>Пока нет ни одного ответа в этой группе.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Имя</th>
+                                    <th>Ответ</th>
+                                    <th>Компания</th>
+                                    <th>Группа</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                responses.forEach((r, index) => {
+                    const isYes = r.presence && r.presence !== 'К сожалению, не смогу';
+                    const statusClass = isYes ? 'status-yes' : 'status-no';
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><strong>${r.name}</strong></td>
+                            <td class="${statusClass}">${r.presence}</td>
+                            <td>${r.companion || '—'}</td>
+                            <td><span class="group-label ${getGroupClass(r.group)}">${getGroupLabel(r.group)}</span></td>
+                            <td style="font-size: 12px; opacity: 0.7;">${r.date || 'только что'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
                     </div>
                 `;
-                return;
-            }
 
-            let html = `
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Имя</th>
-                                <th>Ответ</th>
-                                <th>Компания</th>
-                                <th>Группа</th>
-                                <th>Дата</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            responses.forEach((r, index) => {
-                const isYes = r.presence && r.presence !== 'К сожалению, не смогу';
-                const statusClass = isYes ? 'status-yes' : 'status-no';
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td><strong>${r.name}</strong></td>
-                        <td class="${statusClass}">${r.presence}</td>
-                        <td>${r.companion || '—'}</td>
-                        <td><span class="group-label ${getGroupClass(r.group)}">${getGroupLabel(r.group)}</span></td>
-                        <td style="font-size: 12px; opacity: 0.7;">${r.date || 'только что'}</td>
-                    </tr>
-                `;
+                container.innerHTML = html;
             });
-
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-
-            container.innerHTML = html;
         }
 
         function exportToCSV() {
-            const responses = loadResponses();
-            if (responses.length === 0) {
-                alert('Нет данных для экспорта.');
-                return;
-            }
+            loadResponses().then(responses => {
+                if (responses.length === 0) {
+                    alert('Нет данных для экспорта.');
+                    return;
+                }
 
-            let csv = 'Имя,Ответ,Компания,Группа,Дата\n';
-            responses.forEach(r => {
-                csv += `"${r.name}","${r.presence}","${r.companion || ''}","${getGroupLabel(r.group)}","${r.date || ''}"\n`;
+                let csv = 'Имя,Ответ,Компания,Группа,Дата\n';
+                responses.forEach(r => {
+                    csv += `"${r.name}","${r.presence}","${r.companion || ''}","${getGroupLabel(r.group)}","${r.date || ''}"\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'список_гостей.csv';
+                link.click();
             });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'список_гостей.csv';
-            link.click();
         }
 
         function clearAllResponses() {
             if (confirm('Вы уверены? Это удалит все сохранённые ответы.')) {
-                saveResponses([]);
-                renderTable();
-                alert('Все ответы удалены.');
+                saveResponses([]).then(() => {
+                    renderTable();
+                    alert('Все ответы удалены.');
+                });
             }
         }
 
-        // Загружаем таблицу при открытии страницы
         renderTable();
     </script>
 </body>
