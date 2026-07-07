@@ -309,7 +309,7 @@
             Приглашаем Вас разделить с нами этот день —<br>день рождения семьи Каплиных.
         </p>
 
-        <!-- ДОПОЛНИТЕЛЬНЫЙ ТЕКСТ ДЛЯ ДРУЗЕЙ (БУДЕТ ПОКАЗАН ТОЛЬКО ИМ) -->
+        <!-- ДОПОЛНИТЕЛЬНЫЙ ТЕКСТ ДЛЯ ДРУЗЕЙ (будет показан только им) -->
         <div id="friendsExtraText" style="display: none; margin-top: 15px;">
             <p style="font-style: italic; opacity: 0.8;">
                 ❤️ 14 августа мы планируем тихое семейное торжество в ЗАГСе.<br><br>
@@ -327,15 +327,12 @@
                 <span style="opacity: 0.5;">ПН</span><span style="opacity: 0.5;">ВТ</span><span style="opacity: 0.5;">СР</span><span style="opacity: 0.5;">ЧТ</span><span style="opacity: 0.5;">ПТ</span><span style="opacity: 0.5;">СБ</span><span style="opacity: 0.5;">ВС</span>
                 <span></span><span></span><span></span><span></span><span></span><span>1</span><span>2</span>
                 <span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
-                <span>10</span><span>11</span><span>12</span><span>13</span><span style="border: 2px solid #c9a84c; border-radius: 50%; padding: 2px; color: #c9a84c; font-weight: bold;">14</span><span>15</span><span>16</span>
+                <span>10</span><span>11</span><span>12</span><span>13</span><span style="border: 2px solid #c9a84c; border-radius: 50%; padding: 2px; color: #c9a84c; font-weight: bold;">14</span><span id="day15">15</span><span>16</span>
                 <span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span>
                 <span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span>
                 <span>31</span>
             </div>
             <div style="margin-top: 10px; color: #c9a84c; font-size: 22px;">❤</div>
-            <div style="margin-top: 5px; color: #27ae60; font-size: 14px;" id="calendarExtraNote">
-                <span style="border: 2px solid #27ae60; border-radius: 50%; padding: 2px;">15</span> — Шашлыки для друзей
-            </div>
         </div>
 
         <div class="divider"></div>
@@ -432,13 +429,13 @@
         <p style="font-size: 12px; opacity: 0.4; margin-top: 20px; letter-spacing: 2px; text-transform: uppercase;">До встречи!</p>
     </div>
 
-    <!-- АУДИОПЛЕЕР -->
+    <!-- АУДИОПЛЕЕР (всегда включён) -->
     <audio id="bgMusic" src="https://raw.githubusercontent.com/Kapelka404/wedding/main/Edith%20Piaf%20(%D0%AD%D0%B4%D0%B8%D1%82%20%D0%9F%D0%B8%D0%B0%D1%84)%20-%20La%20Foule.mp3" loop preload="auto"></audio>
 
     <script>
         // ===== ОПРЕДЕЛЯЕМ ГРУППУ =====
         const urlParams = new URLSearchParams(window.location.search);
-        const group = urlParams.get('group') || 'family'; // по умолчанию близкие
+        const group = urlParams.get('group') || 'family';
 
         // ===== НАСТРОЙКИ ДЛЯ КАЖДОЙ ГРУППЫ =====
         if (group === 'family') {
@@ -452,10 +449,15 @@
             document.getElementById('friendsExtraText').style.display = 'block';
             document.getElementById('mainQuestion').style.display = 'none';
             document.getElementById('friendsQuestion').style.display = 'block';
-            document.getElementById('calendarExtraNote').style.display = 'block';
+            // Обводим 15-е число зелёным
+            document.getElementById('day15').style.border = '2px solid #27ae60';
+            document.getElementById('day15').style.borderRadius = '50%';
+            document.getElementById('day15').style.padding = '2px';
+            document.getElementById('day15').style.color = '#27ae60';
+            document.getElementById('day15').style.fontWeight = 'bold';
         }
 
-        // ===== СОХРАНЕНИЕ В LOCALSTORAGE =====
+        // ===== СОХРАНЕНИЕ НА GITHUB (все устройства) =====
         document.getElementById("guestForm").addEventListener("submit", function(e) {
             e.preventDefault();
             
@@ -468,19 +470,56 @@
             const companion = document.getElementById("companion").value.trim() || "Нет";
             const date = new Date().toLocaleString('ru-RU');
 
-            // Сохраняем вместе с группой
-            const stored = localStorage.getItem('weddingResponses');
-            const responses = stored ? JSON.parse(stored) : [];
-            responses.push({ name, presence, companion, date, group });
-            localStorage.setItem('weddingResponses', JSON.stringify(responses));
+            // Собираем данные
+            const newResponse = { name, presence, companion, date, group };
 
-            setTimeout(() => {
-                document.getElementById("guestForm").reset();
-            }, 500);
+            // Отправляем на GitHub через API (публичный репозиторий)
+            fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Декодируем текущий список
+                const content = atob(data.content);
+                let responses = JSON.parse(content);
+                responses.push(newResponse);
 
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+                // Кодируем обратно в base64
+                const updatedContent = btoa(JSON.stringify(responses, null, 2));
+
+                // Отправляем обновлённый файл
+                return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Новый ответ гостя',
+                        content: updatedContent,
+                        sha: data.sha
+                    })
+                });
+            })
+            .then(res => res.json())
+            .then(() => {
+                // Всё хорошо
+                setTimeout(() => {
+                    document.getElementById("guestForm").reset();
+                }, 500);
+            })
+            .catch(err => {
+                console.error('Ошибка сохранения:', err);
+                toast.innerHTML = `<span class="check">⚠️</span> <span>Ошибка при сохранении. Попробуйте позже.</span>`;
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            });
         });
 
         // Таймер
