@@ -256,20 +256,26 @@
     <script>
         let currentGroup = 'all';
 
-        // Загрузка с GitHub
+        // Загрузка с GitHub (с защитой от кэширования и кракозябр)
         function loadResponses() {
-            return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json')
+            return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
+                cache: 'no-cache'
+            })
                 .then(res => res.json())
                 .then(data => {
+                    if (!data.content) return [];
+                    // Декодируем base64 в UTF-8
                     const content = atob(data.content);
-                    return JSON.parse(content);
+                    const utf8Content = decodeURIComponent(escape(content));
+                    return JSON.parse(utf8Content);
                 })
                 .catch(() => []);
         }
 
         function saveResponses(responses) {
-            // Для очистки — перезаписываем файл
-            const content = btoa(JSON.stringify(responses, null, 2));
+            const jsonString = JSON.stringify(responses, null, 2);
+            const utf8String = unescape(encodeURIComponent(jsonString));
+            const content = btoa(utf8String);
             return fetch('https://api.github.com/repos/Kapelka404/wedding/contents/responses.json', {
                 method: 'PUT',
                 headers: {
@@ -278,8 +284,7 @@
                 },
                 body: JSON.stringify({
                     message: 'Очистка списка ответов',
-                    content: content,
-                    sha: 'current_sha' // будет заменено
+                    content: content
                 })
             });
         }
