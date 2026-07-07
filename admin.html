@@ -42,67 +42,42 @@
             margin-bottom: 30px;
         }
 
-        /* ===== АВТОРИЗАЦИЯ ===== */
-        .auth-section {
+        /* ===== СТАТУС ТОКЕНА ===== */
+        .token-status {
             background: #f8f6f9;
-            padding: 25px;
-            border-radius: 16px;
-            margin-bottom: 30px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-
-        .auth-section label {
+        .token-status .status {
             font-size: 14px;
-            display: block;
-            margin-bottom: 8px;
             font-weight: 500;
         }
-
-        .auth-section input[type="password"] {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(26, 26, 78, 0.2);
-            border-radius: 12px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 15px;
-            margin-bottom: 12px;
-            background: #ffffff;
-            transition: 0.3s;
+        .token-status .status.ok {
+            color: #27ae60;
         }
-
-        .auth-section input[type="password"]:focus {
-            outline: none;
-            border-color: #1a1a4e;
-            box-shadow: 0 0 0 3px rgba(26, 26, 78, 0.1);
+        .token-status .status.error {
+            color: #e74c3c;
         }
-
-        .btn-auth {
+        .btn-reload-token {
             background: #1a1a4e;
             color: #fff;
-            padding: 12px 30px;
+            padding: 8px 20px;
             border: none;
             border-radius: 50px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
+            transition: 0.3s;
         }
-
-        .btn-auth:hover {
+        .btn-reload-token:hover {
             background: #c9a84c;
             color: #1a1a4e;
-        }
-
-        .auth-hint {
-            font-size: 12px;
-            opacity: 0.5;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
-        .hidden {
-            display: none !important;
         }
 
         .tabs {
@@ -276,7 +251,6 @@
             color: #e65100;
         }
 
-        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             top: 20px;
@@ -333,6 +307,10 @@
             th, td {
                 padding: 8px 10px;
             }
+            .token-status {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -347,51 +325,44 @@
         <h1>Админ-панель</h1>
         <p class="subtitle">Управление списком гостей</p>
 
-        <!-- Безопасный вход с токеном -->
-        <div class="auth-section" id="authSection">
-            <label>🔑 Введите GitHub токен для доступа к данным</label>
-            <input type="password" id="tokenInput" placeholder="github_pat_xxxx...">
-            <button class="btn-auth" onclick="authenticate()">Войти</button>
-            <p class="auth-hint">
-                Токен сохраняется только в вашем браузере и никуда не отправляется
-            </p>
+        <!-- Статус токена -->
+        <div class="token-status" id="tokenStatus">
+            <span class="status" id="tokenStatusText">⏳ Проверка токена...</span>
+            <button class="btn-reload-token" onclick="loadToken()">🔄 Обновить токен</button>
         </div>
 
-        <!-- Основной контент (скрыт до входа) -->
-        <div id="mainContent" class="hidden">
-            <div class="tabs">
-                <button class="tab-btn active" data-group="all" onclick="switchTab('all')">Все (0)</button>
-                <button class="tab-btn" data-group="family" onclick="switchTab('family')">👨‍👩‍👧‍👦 Близкие (0)</button>
-                <button class="tab-btn" data-group="relatives" onclick="switchTab('relatives')">👨‍👩‍👦 Дальние (0)</button>
-                <button class="tab-btn" data-group="friend" onclick="switchTab('friend')">🍖 Друзья (0)</button>
-            </div>
+        <div class="tabs">
+            <button class="tab-btn active" data-group="all" onclick="switchTab('all')">Все (0)</button>
+            <button class="tab-btn" data-group="family" onclick="switchTab('family')">👨‍👩‍👧‍👦 Близкие (0)</button>
+            <button class="tab-btn" data-group="relatives" onclick="switchTab('relatives')">👨‍👩‍👦 Дальние (0)</button>
+            <button class="tab-btn" data-group="friend" onclick="switchTab('friend')">🍖 Друзья (0)</button>
+        </div>
 
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-number" id="totalCount">0</div>
-                    <div class="stat-label">Всего ответов</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="yesCount">0</div>
-                    <div class="stat-label">Придут</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="noCount">0</div>
-                    <div class="stat-label">Не придут</div>
-                </div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Всего ответов</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-number" id="yesCount">0</div>
+                <div class="stat-label">Придут</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="noCount">0</div>
+                <div class="stat-label">Не придут</div>
+            </div>
+        </div>
 
-            <div id="responsesContainer">
-                <div class="empty-state">
-                    <div class="icon">📭</div>
-                    <p>Загрузка данных...</p>
-                </div>
+        <div id="responsesContainer">
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <p>Загрузка данных...</p>
             </div>
+        </div>
 
-            <div class="actions">
-                <button class="btn-export" onclick="exportToCSV()">📥 Скачать список (CSV)</button>
-                <button class="btn-clear" onclick="clearAll()">🗑 Очистить все</button>
-            </div>
+        <div class="actions">
+            <button class="btn-export" onclick="exportToCSV()">📥 Скачать список (CSV)</button>
+            <button class="btn-clear" onclick="clearAll()">🗑 Очистить все</button>
         </div>
     </div>
 
@@ -400,7 +371,9 @@
         const REPO_OWNER = 'Kapelka404';
         const REPO_NAME = 'wedding';
         const FILE_PATH = 'data.json';
+        const TOKEN_FILE = '.token';
         const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        const TOKEN_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${TOKEN_FILE}`;
 
         let currentGroup = 'all';
         let allGuests = [];
@@ -420,41 +393,51 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // ===== АУТЕНТИФИКАЦИЯ =====
-        function authenticate() {
-            const token = document.getElementById('tokenInput').value.trim();
-            if (!token) {
-                showToast('Введите GitHub токен', false);
-                return;
-            }
+        // ===== ЗАГРУЗКА ТОКЕНА =====
+        async function loadToken() {
+            const statusEl = document.getElementById('tokenStatusText');
+            statusEl.textContent = '⏳ Загрузка токена...';
+            statusEl.className = 'status';
 
-            githubToken = token;
-            
-            // Сохраняем в localStorage
             try {
-                localStorage.setItem('github_token', token);
-            } catch (e) {}
-            
-            loadData();
+                const response = await fetch(TOKEN_URL);
+                
+                if (!response.ok) {
+                    statusEl.textContent = '❌ Ошибка загрузки токена (файл .token не найден)';
+                    statusEl.className = 'status error';
+                    return false;
+                }
+                
+                const token = await response.text();
+                githubToken = token.trim();
+                
+                if (githubToken.length < 10) {
+                    statusEl.textContent = '❌ Токен слишком короткий! Проверьте файл .token';
+                    statusEl.className = 'status error';
+                    return false;
+                }
+                
+                statusEl.textContent = `✅ Токен загружен (${githubToken.length} символов)`;
+                statusEl.className = 'status ok';
+                
+                // Сохраняем в localStorage
+                try {
+                    localStorage.setItem('github_token', githubToken);
+                } catch (e) {}
+                
+                return true;
+            } catch (error) {
+                statusEl.textContent = '❌ Ошибка: ' + error.message;
+                statusEl.className = 'status error';
+                return false;
+            }
         }
 
         // ===== ЗАГРУЗКА ДАННЫХ =====
         async function loadData() {
-            // Если токена нет, пробуем из localStorage
+            // Загружаем токен, если его нет
             if (!githubToken) {
-                try {
-                    const saved = localStorage.getItem('github_token');
-                    if (saved) {
-                        githubToken = saved;
-                        document.getElementById('tokenInput').value = saved;
-                    }
-                } catch (e) {}
-            }
-
-            if (!githubToken) {
-                document.getElementById('authSection').style.display = 'block';
-                document.getElementById('mainContent').classList.add('hidden');
-                return;
+                await loadToken();
             }
 
             const container = document.getElementById('responsesContainer');
@@ -466,27 +449,21 @@
             `;
 
             try {
+                // Сначала получаем данные публично (без токена)
                 const response = await fetch(API_URL, {
                     headers: {
-                        'Authorization': `token ${githubToken}`,
                         'Accept': 'application/vnd.github.v3+json'
                     }
                 });
 
                 if (response.status === 404) {
-                    // Файл не существует, создаем пустой
-                    await createEmptyData();
+                    allGuests = [];
+                    renderData();
                     return;
                 }
 
                 if (!response.ok) {
-                    if (response.status === 401) {
-                        showToast('Неверный токен. Проверьте права доступа', false);
-                        document.getElementById('authSection').style.display = 'block';
-                        document.getElementById('mainContent').classList.add('hidden');
-                        return;
-                    }
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
@@ -494,9 +471,6 @@
                 const parsed = JSON.parse(content);
                 allGuests = parsed.guests || [];
 
-                document.getElementById('authSection').style.display = 'none';
-                document.getElementById('mainContent').classList.remove('hidden');
-                
                 renderData();
                 showToast('Данные загружены', true);
 
@@ -505,62 +479,60 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">⚠️</div>
-                        <p>Ошибка загрузки данных. Проверьте подключение.</p>
+                        <p>Ошибка загрузки данных: ${error.message}</p>
                         <button style="margin-top:15px;padding:10px 25px;border-radius:50px;border:2px solid #1a1a4e;background:transparent;cursor:pointer;font-family:inherit;" onclick="loadData()">🔄 Попробовать снова</button>
                     </div>
                 `;
             }
         }
 
-        // ===== СОЗДАНИЕ ПУСТОГО ФАЙЛА =====
-        async function createEmptyData() {
-            try {
-                const emptyData = { guests: [] };
-                const content = btoa(JSON.stringify(emptyData, null, 2));
-
-                const response = await fetch(API_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${githubToken}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Создание файла данных',
-                        content: content
-                    })
-                });
-
-                if (!response.ok) throw new Error('Ошибка создания файла');
-                
-                allGuests = [];
-                document.getElementById('authSection').style.display = 'none';
-                document.getElementById('mainContent').classList.remove('hidden');
-                renderData();
-                showToast('Файл данных создан', true);
-
-            } catch (error) {
-                console.error('Ошибка создания файла:', error);
-                showToast('Ошибка создания файла данных', false);
-            }
-        }
-
         // ===== СОХРАНЕНИЕ ДАННЫХ =====
         async function saveGuests() {
+            if (!githubToken) {
+                const loaded = await loadToken();
+                if (!loaded) {
+                    showToast('❌ Нет токена для сохранения!', false);
+                    return false;
+                }
+            }
+
             try {
-                // Получаем текущий файл для sha
-                const response = await fetch(API_URL, {
+                // Получаем файл с токеном для sha
+                const getResponse = await fetch(API_URL, {
                     headers: {
                         'Authorization': `token ${githubToken}`,
                         'Accept': 'application/vnd.github.v3+json'
                     }
                 });
                 
-                const fileData = await response.json();
-                const sha = fileData.sha;
+                let sha = null;
+                if (getResponse.ok) {
+                    const data = await getResponse.json();
+                    sha = data.sha;
+                } else if (getResponse.status === 401) {
+                    showToast('❌ Токен невалидный! Обновите файл .token', false);
+                    return false;
+                } else if (getResponse.status !== 404) {
+                    throw new Error(`HTTP ${getResponse.status}`);
+                }
                 
                 const data = { guests: allGuests };
-                const content = btoa(JSON.stringify(data, null, 2));
+                const jsonString = JSON.stringify(data, null, 2);
+                
+                // UTF-8 to Base64
+                function utf8ToBase64(str) {
+                    return new Promise((resolve, reject) => {
+                        const blob = new Blob([str], { type: 'text/plain;charset=utf-8' });
+                        const reader = new FileReader();
+                        reader.onload = function() {
+                            resolve(reader.result.split(',')[1]);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                }
+                
+                const content = await utf8ToBase64(jsonString);
 
                 const updateResponse = await fetch(API_URL, {
                     method: 'PUT',
@@ -577,12 +549,13 @@
                 });
 
                 if (!updateResponse.ok) {
-                    const errorData = await updateResponse.json();
-                    console.error('Ошибка сохранения:', errorData);
-                    throw new Error('Ошибка сохранения');
+                    if (updateResponse.status === 401) {
+                        showToast('❌ Токен невалидный! Обновите файл .token', false);
+                    }
+                    throw new Error(`HTTP ${updateResponse.status}`);
                 }
+                
                 return true;
-
             } catch (error) {
                 console.error('Ошибка сохранения:', error);
                 return false;
@@ -593,7 +566,6 @@
         function renderData() {
             const filtered = currentGroup === 'all' ? allGuests : allGuests.filter(g => g.group === currentGroup);
 
-            // Обновляем счетчики на вкладках
             const groups = {
                 all: allGuests.length,
                 family: allGuests.filter(g => g.group === 'family').length,
@@ -608,7 +580,6 @@
                 btn.classList.toggle('active', group === currentGroup);
             });
 
-            // Статистика
             const total = allGuests.length;
             const yes = allGuests.filter(g => g.presence && g.presence !== 'К сожалению, не смогу').length;
             const no = allGuests.filter(g => g.presence === 'К сожалению, не смогу').length;
@@ -617,7 +588,6 @@
             document.getElementById('yesCount').textContent = yes;
             document.getElementById('noCount').textContent = no;
 
-            // Таблица
             const container = document.getElementById('responsesContainer');
 
             if (filtered.length === 0) {
@@ -687,13 +657,11 @@
             return div.innerHTML;
         }
 
-        // ===== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =====
         function switchTab(group) {
             currentGroup = group;
             renderData();
         }
 
-        // ===== ЭКСПОРТ В CSV =====
         function exportToCSV() {
             if (allGuests.length === 0) {
                 showToast('Нет данных для экспорта', false);
@@ -728,15 +696,14 @@
             showToast('CSV скачан', true);
         }
 
-        // ===== ОЧИСТКА ВСЕХ ДАННЫХ =====
         async function clearAll() {
             if (allGuests.length === 0) {
                 showToast('Нет данных для очистки', false);
                 return;
             }
 
-            if (!confirm('⚠️ Вы уверены? Это действие удалит ВСЕ сохранённые ответы.')) return;
-            if (!confirm('Подтвердите ещё раз: удалить все ответы гостей?')) return;
+            if (!confirm('⚠️ Вы уверены? Это удалит ВСЕ ответы.')) return;
+            if (!confirm('Подтвердите ещё раз: удалить все?')) return;
 
             allGuests = [];
             const success = await saveGuests();
@@ -745,22 +712,13 @@
                 renderData();
                 showToast('✅ Все данные удалены', true);
             } else {
-                showToast('Ошибка при очистке данных', false);
+                showToast('❌ Ошибка при очистке', false);
             }
         }
 
-        // ===== ВХОД ПО ENTER =====
-        document.getElementById('tokenInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') authenticate();
-        });
-
-        // ===== АВТОМАТИЧЕСКИЙ ВХОД =====
+        // ===== ЗАПУСК =====
         document.addEventListener('DOMContentLoaded', function() {
-            const savedToken = localStorage.getItem('github_token');
-            if (savedToken) {
-                document.getElementById('tokenInput').value = savedToken;
-                authenticate();
-            }
+            loadData();
         });
 
         console.log('✅ Админ-панель загружена');
