@@ -1,3 +1,11 @@
 {
-  "guests": []
+  "guests": [
+    {
+      "name": "Ров",
+      "presence": "Да, буду",
+      "companion": "Нет",
+      "group": "family",
+      "created_at": "2026-07-07T17:58:56.380Z"
+    }
+  ]
 }
