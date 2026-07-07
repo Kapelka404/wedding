@@ -5,80 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Админ-панель — Свадьба Кирилла и Александры</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        body { 
-            font-family: 'Montserrat', sans-serif; 
-            background-color: #f5f5f5;
-            color: #1a1a4e; 
-            padding: 40px 20px;
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #f5f4f7;
+            color: #1a1a4e;
+            padding: 30px 20px;
             display: flex;
             justify-content: center;
+            min-height: 100vh;
         }
 
         .admin-container {
-            max-width: 800px;
+            max-width: 1000px;
             width: 100%;
             background: #ffffff;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(26, 26, 78, 0.1);
+            border-radius: 24px;
+            padding: 35px 30px 40px;
+            box-shadow: 0 20px 60px rgba(26, 26, 78, 0.08);
         }
 
         h1 {
             font-family: 'Playfair Display', serif;
             font-style: italic;
-            font-size: 32px;
+            font-size: 34px;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            font-weight: 400;
         }
 
         .subtitle {
             text-align: center;
             font-size: 14px;
-            opacity: 0.6;
+            opacity: 0.5;
             margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 1px;
         }
 
+        /* Вкладки */
         .tabs {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 25px;
             flex-wrap: wrap;
         }
 
         .tab-btn {
-            padding: 10px 25px;
+            padding: 10px 22px;
             border-radius: 50px;
             border: 2px solid #1a1a4e;
             background: transparent;
             color: #1a1a4e;
             font-family: 'Montserrat', sans-serif;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .tab-btn:hover {
+            background: #1a1a4e;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(26, 26, 78, 0.15);
         }
 
         .tab-btn.active {
             background: #1a1a4e;
-            color: #fff;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(26, 26, 78, 0.2);
         }
 
-        .tab-btn:hover {
-            background: #c9a84c;
-            border-color: #c9a84c;
-            color: #1a1a4e;
+        .tab-btn .count {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            margin-left: 4px;
         }
 
+        .tab-btn.active .count {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Статистика */
         .stats {
             display: flex;
             justify-content: center;
             gap: 40px;
             margin-bottom: 30px;
             flex-wrap: wrap;
+            background: #f8f6f9;
+            padding: 18px 30px;
+            border-radius: 16px;
         }
 
         .stat-item {
@@ -86,43 +116,61 @@
         }
 
         .stat-number {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 600;
             color: #1a1a4e;
+            line-height: 1.2;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            opacity: 0.6;
+            opacity: 0.5;
+            font-weight: 500;
         }
 
+        /* Таблица */
         .table-wrapper {
             overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid rgba(26, 26, 78, 0.06);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            min-width: 600px;
         }
 
         thead {
             background: #1a1a4e;
-            color: #fff;
+            color: #ffffff;
         }
 
         th {
-            padding: 12px 15px;
+            padding: 14px 16px;
             text-align: left;
-            font-weight: 400;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0eef3;
+            font-weight: 300;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #faf9fc;
         }
 
         .status-yes {
@@ -135,68 +183,18 @@
             font-weight: 500;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #888;
-        }
-
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-
-        .actions {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 30px;
-        }
-
-        .btn-export {
-            display: inline-block;
-            background: #1a1a4e;
-            color: #fff;
-            padding: 10px 25px;
-            border-radius: 50px;
-            border: none;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 13px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-export:hover {
-            background: #c9a84c;
-            color: #1a1a4e;
-        }
-
-        .btn-clear {
-            display: inline-block;
-            background: #e74c3c;
-            color: #fff;
-            padding: 10px 25px;
-            border-radius: 50px;
-            border: none;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 13px;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: 0.3s;
-        }
-
-        .btn-clear:hover {
-            background: #c0392b;
+        .status-maybe {
+            color: #f39c12;
+            font-weight: 500;
         }
 
         .group-label {
             display: inline-block;
-            padding: 3px 12px;
+            padding: 4px 14px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 500;
-            margin-right: 5px;
+            letter-spacing: 0.3px;
         }
 
         .group-family {
@@ -213,19 +211,209 @@
             background: #fff3e0;
             color: #e65100;
         }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 52px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        /* Кнопки действий */
+        .actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-export {
+            background: #1a1a4e;
+            color: #ffffff;
+        }
+
+        .btn-export:hover {
+            background: #c9a84c;
+            color: #1a1a4e;
+        }
+
+        .btn-clear {
+            background: #e74c3c;
+            color: #ffffff;
+        }
+
+        .btn-clear:hover {
+            background: #c0392b;
+        }
+
+        .btn-refresh {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-refresh:hover {
+            background: #d5dbdb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-weight: 300;
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f0eef3;
+            border-top-color: #1a1a4e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 20px 16px 30px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .stats {
+                gap: 20px;
+                padding: 15px 20px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .tab-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+
+            table {
+                font-size: 12px;
+                min-width: 500px;
+            }
+
+            th,
+            td {
+                padding: 10px 12px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .admin-container {
+                padding: 15px 12px 25px;
+                border-radius: 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .stats {
+                gap: 12px;
+                padding: 12px 16px;
+                border-radius: 12px;
+            }
+
+            .stat-number {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 9px;
+            }
+
+            .tab-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            table {
+                font-size: 11px;
+                min-width: 400px;
+            }
+
+            th,
+            td {
+                padding: 8px 10px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="admin-container">
         <h1>Админ-панель</h1>
-        <p class="subtitle">Список гостей, подтвердивших присутствие</p>
+        <p class="subtitle">Управление списком гостей</p>
 
-        <div class="tabs">
-            <button class="tab-btn active" data-group="all" onclick="switchTab('all')">Все (0)</button>
-            <button class="tab-btn" data-group="family" onclick="switchTab('family')">👨‍👩‍👧‍👦 Близкие (0)</button>
-            <button class="tab-btn" data-group="relatives" onclick="switchTab('relatives')">👨‍👩‍👦 Дальние (0)</button>
-            <button class="tab-btn" data-group="friend" onclick="switchTab('friend')">🍖 Друзья (0)</button>
+        <div class="tabs" id="tabsContainer">
+            <button class="tab-btn active" data-group="all">Все <span class="count" id="countAll">0</span></button>
+            <button class="tab-btn" data-group="family">👨‍👩‍👧‍👦 Близкие <span class="count" id="countFamily">0</span></button>
+            <button class="tab-btn" data-group="relatives">👨‍👩‍👦 Дальние <span class="count" id="countRelatives">0</span></button>
+            <button class="tab-btn" data-group="friend">🍖 Друзья <span class="count" id="countFriend">0</span></button>
         </div>
 
         <div class="stats">
@@ -244,23 +432,45 @@
         </div>
 
         <div id="responsesContainer">
-            <!-- Таблица будет заполняться через JavaScript -->
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Загрузка данных...</p>
+            </div>
         </div>
 
         <div class="actions">
-            <button class="btn-export" onclick="exportToCSV()">📥 Скачать список (CSV)</button>
-            <button class="btn-clear" onclick="clearAllResponses()">🗑 Очистить все</button>
+            <button class="btn btn-refresh" onclick="loadData()">🔄 Обновить</button>
+            <button class="btn btn-export" onclick="exportToCSV()">📥 Скачать список (CSV)</button>
+            <button class="btn btn-clear" onclick="clearAll()">🗑 Очистить все</button>
         </div>
     </div>
 
     <script>
+        // ============================================================
+        // КОНФИГУРАЦИЯ SUPABASE
+        // ============================================================
+        const SUPABASE_URL = 'https://dnamkenqudbgrxunqukv.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_-xThs4tWVNhnBIKj0XgJxA_Z9BNawtu';
+
+        let allResponses = [];
         let currentGroup = 'all';
+        let isLoading = false;
 
-        // ===== НАСТРОЙКИ SUPABASE =====
-        const SUPABASE_URL = "https://dnamkenqudbgrxunqukv.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_-xThs4tWVNhnBIKj0XgJxA_Z9BNawtu";
+        // ============================================================
+        // ЗАГРУЗКА ДАННЫХ
+        // ============================================================
+        async function loadData() {
+            if (isLoading) return;
+            isLoading = true;
 
-        async function loadResponses() {
+            const container = document.getElementById('responsesContainer');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка данных...</p>
+                </div>
+            `;
+
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/guests?order=created_at.desc`, {
                     headers: {
@@ -268,118 +478,282 @@
                         'Authorization': `Bearer ${SUPABASE_KEY}`
                     }
                 });
-                if (!response.ok) throw new Error('Ошибка загрузки');
-                return await response.json();
-            } catch (e) {
-                console.error(e);
-                return [];
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                allResponses = await response.json();
+
+                // Обновляем статистику
+                updateStats();
+
+                // Обновляем счетчики на вкладках
+                updateTabCounts();
+
+                // Рендерим таблицу
+                renderTable();
+
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <p>Ошибка загрузки данных. Проверьте подключение к интернету.</p>
+                        <button class="btn btn-refresh" style="margin-top: 15px;" onclick="loadData()">🔄 Попробовать снова</button>
+                    </div>
+                `;
+            } finally {
+                isLoading = false;
             }
         }
 
-        async function clearAllResponses() {
-            if (!confirm('Вы уверены? Это удалит все сохранённые ответы.')) return;
+        // ============================================================
+        // ОБНОВЛЕНИЕ СТАТИСТИКИ
+        // ============================================================
+        function updateStats() {
+            const total = allResponses.length;
+            const yes = allResponses.filter(r => {
+                const p = r.presence || '';
+                return p !== 'К сожалению, не смогу' && p !== '';
+            }).length;
+            const no = allResponses.filter(r => r.presence === 'К сожалению, не смогу').length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('yesCount').textContent = yes;
+            document.getElementById('noCount').textContent = no;
+        }
+
+        // ============================================================
+        // ОБНОВЛЕНИЕ СЧЕТЧИКОВ НА ВКЛАДКАХ
+        // ============================================================
+        function updateTabCounts() {
+            const groups = {
+                all: allResponses.length,
+                family: allResponses.filter(r => r.group === 'family').length,
+                relatives: allResponses.filter(r => r.group === 'relatives').length,
+                friend: allResponses.filter(r => r.group === 'friend').length
+            };
+
+            document.getElementById('countAll').textContent = groups.all;
+            document.getElementById('countFamily').textContent = groups.family;
+            document.getElementById('countRelatives').textContent = groups.relatives;
+            document.getElementById('countFriend').textContent = groups.friend;
+        }
+
+        // ============================================================
+        // РЕНДЕРИНГ ТАБЛИЦЫ
+        // ============================================================
+        function renderTable() {
+            const container = document.getElementById('responsesContainer');
+            let filtered = allResponses;
+
+            if (currentGroup !== 'all') {
+                filtered = allResponses.filter(r => r.group === currentGroup);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>Пока нет ни одного ответа${currentGroup !== 'all' ? ' в этой группе' : ''}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Имя</th>
+                                <th>Ответ</th>
+                                <th>Компания</th>
+                                <th>Группа</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            filtered.forEach((r, index) => {
+                const isYes = r.presence && r.presence !== 'К сожалению, не смогу';
+                const statusClass = isYes ? 'status-yes' : 'status-no';
+                const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'только что';
+
+                const groupLabel = getGroupLabel(r.group);
+                const groupClass = getGroupClass(r.group);
+
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${escapeHtml(r.name || 'Без имени')}</strong></td>
+                        <td class="${statusClass}">${escapeHtml(r.presence || 'Не указано')}</td>
+                        <td>${escapeHtml(r.companion || '—')}</td>
+                        <td><span class="group-label ${groupClass}">${groupLabel}</span></td>
+                        <td style="font-size: 12px; opacity: 0.6;">${date}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+        // ============================================================
+        function getGroupLabel(group) {
+            const labels = {
+                'family': 'Близкие',
+                'relatives': 'Дальние',
+                'friend': 'Друзья'
+            };
+            return labels[group] || group || 'Неизвестно';
+        }
+
+        function getGroupClass(group) {
+            const classes = {
+                'family': 'group-family',
+                'relatives': 'group-relatives',
+                'friend': 'group-friend'
+            };
+            return classes[group] || '';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+        // ============================================================
+        function switchTab(group) {
+            currentGroup = group;
+
+            // Обновляем активную вкладку
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.group === group);
+            });
+
+            renderTable();
+        }
+
+        // Назначаем обработчики на вкладки
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchTab(this.dataset.group);
+            });
+        });
+
+        // ============================================================
+        // ЭКСПОРТ В CSV
+        // ============================================================
+        function exportToCSV() {
+            if (allResponses.length === 0) {
+                alert('Нет данных для экспорта.');
+                return;
+            }
+
+            // BOM для корректной работы с UTF-8 в Excel
+            const BOM = '\uFEFF';
+            let csv = BOM + 'Имя;Ответ;Компания;Группа;Дата\n';
+
+            allResponses.forEach(r => {
+                const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '';
+                const row = [
+                    `"${(r.name || '').replace(/"/g, '""')}"`,
+                    `"${(r.presence || '').replace(/"/g, '""')}"`,
+                    `"${(r.companion || '').replace(/"/g, '""')}"`,
+                    `"${getGroupLabel(r.group).replace(/"/g, '""')}"`,
+                    `"${date.replace(/"/g, '""')}"`
+                ];
+                csv += row.join(';') + '\n';
+            });
+
+            // Создаем и скачиваем файл
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const now = new Date().toISOString().slice(0, 10);
+            link.download = `список_гостей_${now}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        // ============================================================
+        // ОЧИСТКА ВСЕХ ДАННЫХ
+        // ============================================================
+        async function clearAll() {
+            if (allResponses.length === 0) {
+                alert('Нет данных для очистки.');
+                return;
+            }
+
+            if (!confirm('⚠️ Вы уверены? Это действие удалит ВСЕ сохранённые ответы без возможности восстановления.')) {
+                return;
+            }
+
+            const doubleCheck = confirm('Подтвердите ещё раз: удалить все ответы гостей?');
+            if (!doubleCheck) return;
+
             try {
-                const responses = await loadResponses();
-                for (let r of responses) {
-                    await fetch(`${SUPABASE_URL}/rest/v1/guests?id=eq.${r.id}`, {
+                // Удаляем все записи по одной (можно удалить все сразу, но для надежности делаем по одной)
+                let deleted = 0;
+                for (const r of allResponses) {
+                    if (!r.id) continue;
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/guests?id=eq.${r.id}`, {
                         method: 'DELETE',
                         headers: {
                             'apikey': SUPABASE_KEY,
                             'Authorization': `Bearer ${SUPABASE_KEY}`
                         }
                     });
+                    if (response.ok) deleted++;
                 }
-                renderTable();
-                alert('Все ответы удалены.');
-            } catch (e) {
-                alert('Ошибка очистки');
+
+                alert(`✅ Удалено ${deleted} записей.`);
+                await loadData();
+            } catch (error) {
+                console.error('Ошибка очистки:', error);
+                alert('❌ Произошла ошибка при очистке данных. Попробуйте позже.');
             }
         }
 
-        function getGroupLabel(group) {
-            const labels = { 'family': 'Близкие', 'relatives': 'Дальние', 'friend': 'Друзья' };
-            return labels[group] || 'Неизвестно';
-        }
+        // ============================================================
+        // ЗАГРУЗКА ПРИ СТАРТЕ
+        // ============================================================
+        // Инициализация — загружаем данные
+        loadData();
 
-        function getGroupClass(group) {
-            const classes = { 'family': 'group-family', 'relatives': 'group-relatives', 'friend': 'group-friend' };
-            return classes[group] || '';
-        }
-
-        function switchTab(group) {
-            currentGroup = group;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.tab-btn[data-group="${group}"]`).classList.add('active');
-            renderTable();
-        }
-
-        async function renderTable() {
-            const allResponses = await loadResponses();
-            let responses = allResponses;
-            if (currentGroup !== 'all') {
-                responses = allResponses.filter(r => r.group === currentGroup);
+        // Автообновление каждые 30 секунд
+        setInterval(() => {
+            if (!isLoading) {
+                loadData().catch(() => {});
             }
+        }, 30000);
 
-            const container = document.getElementById('responsesContainer');
-
-            document.getElementById('totalCount').textContent = allResponses.length;
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                const g = btn.dataset.group;
-                const count = g === 'all' ? allResponses.length : allResponses.filter(r => r.group === g).length;
-                btn.textContent = btn.textContent.replace(/\(\d+\)/, `(${count})`);
-            });
-
-            const yes = allResponses.filter(r => r.presence && r.presence !== 'К сожалению, не смогу').length;
-            const no = allResponses.filter(r => r.presence === 'К сожалению, не смогу').length;
-            document.getElementById('yesCount').textContent = yes;
-            document.getElementById('noCount').textContent = no;
-
-            if (responses.length === 0) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Пока нет ни одного ответа в этой группе.</p></div>`;
-                return;
-            }
-
-            let html = `
-                <div class="table-wrapper"><table><thead><tr>
-                    <th>#</th><th>Имя</th><th>Ответ</th><th>Компания</th><th>Группа</th><th>Дата</th>
-                </tr></thead><tbody>
-            `;
-            responses.forEach((r, index) => {
-                const isYes = r.presence && r.presence !== 'К сожалению, не смогу';
-                const statusClass = isYes ? 'status-yes' : 'status-no';
-                const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : 'только что';
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td><strong>${r.name}</strong></td>
-                        <td class="${statusClass}">${r.presence}</td>
-                        <td>${r.companion || '—'}</td>
-                        <td><span class="group-label ${getGroupClass(r.group)}">${getGroupLabel(r.group)}</span></td>
-                        <td style="font-size: 12px; opacity: 0.7;">${date}</td>
-                    </tr>
-                `;
-            });
-            html += `</tbody></table></div>`;
-            container.innerHTML = html;
-        }
-
-        function exportToCSV() {
-            loadResponses().then(responses => {
-                if (responses.length === 0) { alert('Нет данных для экспорта.'); return; }
-                let csv = 'Имя,Ответ,Компания,Группа,Дата\n';
-                responses.forEach(r => {
-                    const date = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU') : '';
-                    csv += `"${r.name}","${r.presence}","${r.companion || ''}","${getGroupLabel(r.group)}","${date}"\n`;
-                });
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'список_гостей.csv';
-                link.click();
-            });
-        }
-
-        renderTable();
+        console.log('✅ Админ-панель загружена');
+        console.log(`📊 Всего записей: ${allResponses.length}`);
     </script>
+
 </body>
 </html>
